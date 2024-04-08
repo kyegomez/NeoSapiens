@@ -12,7 +12,7 @@ from neo_sapiens.hass_schema import (
 )
 from neo_sapiens.main import browser, terminal
 from swarms import SwarmNetwork
-
+from swarms.utils.parse_code import extract_code_from_markdown
 
 # Swarmnetowr
 network = SwarmNetwork(api_enabled=True, logging_enabled=True)
@@ -192,3 +192,25 @@ print(list_agents)
 #     agent2.id, "What's your name?"
 # )
 # print(out)
+
+
+def run_task(task: str = None,):
+    agent = Agent(
+        agent_name="Swarm Orchestrator",
+        system_prompt=None,
+        llm=OpenAIChat(
+            openai_api_key=None,
+        ),
+        max_loops="auto",
+        autosave=True,
+        dashboard=False,
+        verbose=True,
+        stopping_token="<DONE>",
+        # interactive=True,
+    )
+    out = agent(task)
+    json = extract_code_from_markdown(out)
+    parsed_schema = parse_hass_schema(json)
+    plan, number_of_agents, agents = parsed_schema
+    agents = create_agents(agents)
+    
