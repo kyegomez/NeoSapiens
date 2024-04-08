@@ -4,7 +4,7 @@
 
 
 ## install
-`$ pip install -U swarms`
+`$ pip install -U swarms neo-sapiens`
 
 
 ## usage

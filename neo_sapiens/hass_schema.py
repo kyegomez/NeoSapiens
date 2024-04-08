@@ -194,7 +194,7 @@ print(list_agents)
 # print(out)
 
 
-def run_task(task: str = None,):
+def run_task(task: str = None):
     agent = Agent(
         agent_name="Swarm Orchestrator",
         system_prompt=None,
@@ -213,4 +213,6 @@ def run_task(task: str = None,):
     parsed_schema = parse_hass_schema(json)
     plan, number_of_agents, agents = parsed_schema
     agents = create_agents(agents)
+    # Run the agents
+    
     
