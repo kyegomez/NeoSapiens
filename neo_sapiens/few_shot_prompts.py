@@ -1,4 +1,3 @@
-
 # Example usage
 data = """
 {

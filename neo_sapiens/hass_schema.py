@@ -3,7 +3,6 @@ from typing import List
 from pydantic import BaseModel, Field
 from swarms import Agent, OpenAIChat
 from swarms.utils.json_utils import base_model_to_json
-
 from neo_sapiens.hass_schema import (
     data,
     data1,
@@ -12,6 +11,11 @@ from neo_sapiens.hass_schema import (
     data5,
 )
 from neo_sapiens.main import browser, terminal
+from swarms import SwarmNetwork
+
+
+# Swarmnetowr
+network = SwarmNetwork(api_enabled=True, logging_enabled=True)
 
 
 def tool_router(tool: str, *args, **kwargs):
@@ -70,11 +74,11 @@ class HassSchema(BaseModel):
         description="List of agents to use for the problem",
     )
     # Rules for the agents
-    rules: str = Field(
-        ...,
-        title="Rules for the agents",
-        description="Rules for the agents",
-    )
+    # rules: str = Field(
+    #     ...,
+    #     title="Rules for the agents",
+    #     description="Rules for the agents",
+    # )
 
 
 def transform_schema_to_json(schema: BaseModel):
@@ -100,9 +104,8 @@ def parse_hass_schema(data: str) -> tuple:
         hass_schema.plan,
         hass_schema.number_of_agents,
         hass_schema.agents,
+        # hass_schema.rules,
     )
-
-
 
 
 def merge_plans_into_str(
@@ -122,6 +125,19 @@ def merge_plans_into_str(
 
 parsed_schema = parse_hass_schema(data5)
 plan, number_of_agents, agents = parsed_schema
+
+
+def merge_rules_into_str(prompts: List[str]):
+    """
+    Merge a list of prompts into a single string.
+
+    Args:
+        prompts (List[str]): A list of prompts to be merged.
+
+    Returns:
+        str: The merged prompts as a single string.
+    """
+    return "\n".join(prompts)
 
 
 def create_agents(
@@ -149,7 +165,7 @@ def create_agents(
             agent_name=name,
             system_prompt=system_prompt,
             llm=OpenAIChat(
-                openai_api_key=None,
+                openai_api_key="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",
             ),
             max_loops="auto",
             autosave=True,
@@ -159,10 +175,21 @@ def create_agents(
             interactive=True,
         )
 
-        out("What is your name")
+        network.add_agent(out)
 
     return out
 
 
 out = create_agents(agents)
-print(out)
+# print(out)
+
+# Use network
+list_agents = network.list_agents()
+print(list_agents)
+
+# # Run the workflow on a task
+# run = network.run_single_agent(
+#     agent2.id, "What's your name?"
+# )
+# print(out)
+

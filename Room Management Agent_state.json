@@ -1,10 +1,10 @@
 {
-    "agent_id": "<function agent_id at 0x12f3a68e0>",
+    "agent_id": "<function agent_id at 0x12d77a8e0>",
     "agent_name": "Room Management Agent",
     "agent_description": null,
     "system_prompt": "Automate room assignments, minibar restocking, and housekeeping schedules",
     "sop": null,
-    "short_memory": "system: Automate room assignments, minibar restocking, and housekeeping schedules\n\n\nHuman:: What is your name\n\n\nRoom Management Agent: content='I am a system designed to automate room assignments, minibar restocking, and housekeeping schedules.' response_metadata={'token_usage': {'completion_tokens': 20, 'prompt_tokens': 31, 'total_tokens': 51}, 'model_name': 'gpt-3.5-turbo', 'system_fingerprint': 'fp_b28b39ffa8', 'finish_reason': 'stop', 'logprobs': None}\n\n\nHuman:: \u001b[31mcheck in Kye Gomez to room 120\u001b[0m\n\n",
+    "short_memory": "system: Automate room assignments, minibar restocking, and housekeeping schedules\n\n\nHuman:: What is your name\n\n\nRoom Management Agent: content='I am a system designed to automate room assignments, minibar restocking, and housekeeping schedules.' response_metadata={'token_usage': {'completion_tokens': 20, 'prompt_tokens': 31, 'total_tokens': 51}, 'model_name': 'gpt-3.5-turbo', 'system_fingerprint': 'fp_b28b39ffa8', 'finish_reason': 'stop', 'logprobs': None}\n\n\nHuman:: \u001b[31m/usr/local/bin/python3 /Users/defalt/Desktop/Athena/research/NeoSapiens/neo_sapiens/hass_schema.py\u001b[0m\n\n",
     "loop_interval": 0,
     "retry_attempts": 3,
     "retry_interval": 1,
