@@ -192,4 +192,3 @@ print(list_agents)
 #     agent2.id, "What's your name?"
 # )
 # print(out)
-
