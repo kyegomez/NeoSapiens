@@ -1,8 +1,9 @@
-from swarms import Agent, Anthropic, tool, OpenAIChat
+from swarms import Agent, tool, OpenAIChat
 import subprocess
 
 # Model
 llm = OpenAIChat()
+
 
 # Tools
 @tool
@@ -41,6 +42,7 @@ def browser(query: str):
     webbrowser.open(url)
     return f"Searching for {query} in the browser."
 
+
 @tool
 def create_file(file_path: str, content: str):
     """
@@ -56,6 +58,7 @@ def create_file(file_path: str, content: str):
     with open(file_path, "w") as file:
         file.write(content)
     return f"File {file_path} created successfully."
+
 
 @tool
 def file_editor(file_path: str, mode: str, content: str):
