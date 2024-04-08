@@ -1,9 +1,23 @@
 from pydantic import BaseModel, Field
 from typing import List
 from swarms.utils.json_utils import base_model_to_json
-from swarms import Agent
+from swarms import Agent, OpenAIChat
+from neo_sapiens.main import terminal, browser
 
-# from swarms import OpenAIChat
+
+def tool_router(tool: str, *args, **kwargs):
+    if "terminal" in tool:
+        return terminal(*args, **kwargs)
+    elif "browser" in tool:
+        return browser(*args, **kwargs)
+
+
+class ToolSchema(BaseModel):
+    tool: str = Field(
+        ...,
+        title="Tool name",
+        description="Either `browser` or `terminal`",
+    )
 
 
 class AgentSchema(BaseModel):
@@ -17,6 +31,16 @@ class AgentSchema(BaseModel):
         title="System prompt for the agent",
         description="System prompt for the agent",
     )
+    # tools: List[ToolSchema] = Field(
+    #     ...,
+    #     title="Tools available to the agent",
+    #     description="Either `browser` or `terminal`",
+    # )
+    # task: str = Field(
+    #     ...,
+    #     title="Task assigned to the agent",
+    #     description="Task assigned to the agent",
+    # )
     # TODO: Add more fields here such as the agent's language model, tools, etc.
 
 
@@ -31,7 +55,6 @@ class HassSchema(BaseModel):
         title="Number of agents to use for the problem",
         description="Number of agents to use for the problem",
     )
-
     agents: List[AgentSchema] = Field(
         ...,
         title="List of agents to use for the problem",
@@ -45,6 +68,16 @@ print(f"JSON Schema: {json}")
 
 
 def parse_hass_schema(data: str) -> tuple:
+    """
+    Parses the Home Assistant schema data and returns a tuple containing the plan,
+    number of agents, and the agents themselves.
+
+    Args:
+        data (str): The Home Assistant schema data to be parsed.
+
+    Returns:
+        tuple: A tuple containing the plan, number of agents, and the agents themselves.
+    """
     parsed_data = eval(data)
     hass_schema = HassSchema(**parsed_data)
     return (
@@ -151,17 +184,69 @@ data3 = """
 """
 
 
-def merge_plans_into_str(plan: List[str]) -> str:
+data5 = """
+{
+    "plan": ["Room Management", "Guest Services", "Reservations Handling", "Facility Maintenance", "Staff Coordination"],
+    "number_of_agents": 5,
+    "agents": [
+        {
+            "name": "Room Management Agent",
+            "system_prompt": "Automate room assignments, minibar restocking, and housekeeping schedules"
+        },
+        {
+            "name": "Guest Services Agent",
+            "system_prompt": "Handle check-ins, check-outs, guest requests, and complaints efficiently"
+            "tool": "browser"
+        },
+        {
+            "name": "Reservations Agent",
+            "system_prompt": "Manage room bookings, table reservations, and special requests"
+        },
+        {
+            "name": "Maintenance Agent",
+            "system_prompt": "Schedule and track maintenance tasks for facilities and rooms"
+        },
+        {
+            "name": "Staff Coordination Agent",
+            "system_prompt": "Optimize staff schedules, task assignments, and workload distribution"
+        }
+    ]
+}
+"""
+
+
+def merge_plans_into_str(
+    plan: List[str] = [data, data1, data2, data3]
+) -> str:
+    """
+    Merge a list of plans into a single string.
+
+    Args:
+        plan (List[str]): A list of plans to be merged.
+
+    Returns:
+        str: The merged plans as a single string.
+    """
     return "\n".join(plan)
 
 
-parsed_schema = parse_hass_schema(data)
+parsed_schema = parse_hass_schema(data5)
 plan, number_of_agents, agents = parsed_schema
 
 
 def create_agents(
     agents: List[AgentSchema],
 ):
+    """
+    Create and initialize agents based on the provided AgentSchema objects.
+
+    Args:
+        agents (List[AgentSchema]): A list of AgentSchema objects containing agent information.
+
+    Returns:
+        Agent: The initialized Agent object.
+
+    """
     for agent in agents:
         print(agent)
         name = agent.name
@@ -169,17 +254,22 @@ def create_agents(
         print(agent.name)
         print(agent.system_prompt)
         print("\n")
+
         out = Agent(
             agent_name=name,
             system_prompt=system_prompt,
-            # llm=OpenAIChat(),
-            max_loops="auto",
+            llm=OpenAIChat(
+                openai_api_key="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",
+            ),
+            max_loops=1,
             autosave=True,
             dashboard=False,
             verbose=True,
             stopping_token="<DONE>",
             interactive=True,
         )
+
+        out("What is your name")
 
     return out
 
