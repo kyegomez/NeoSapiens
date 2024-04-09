@@ -164,9 +164,7 @@ def create_agents(
         out = Agent(
             agent_name=name,
             system_prompt=system_prompt,
-            llm=OpenAIChat(
-                openai_api_key="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",
-            ),
+            llm=OpenAIChat(openai_api_key=None),
             max_loops="auto",
             autosave=True,
             dashboard=False,
@@ -195,6 +193,15 @@ def create_agents(
 
 
 def run_task(task: str = None):
+    """
+    Run a task using the Swarm Orchestrator agent.
+
+    Args:
+        task (str): The task to be executed.
+
+    Returns:
+        None
+    """
     agent = Agent(
         agent_name="Swarm Orchestrator",
         system_prompt=None,
