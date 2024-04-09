@@ -1,9 +1,13 @@
+import json
+import os
+from dotenv import load_dotenv
 from typing import List
 
 from pydantic import BaseModel, Field
-from swarms import Agent, OpenAIChat
+from swarms import Agent, Anthropic
 from swarms.utils.json_utils import base_model_to_json
-from neo_sapiens.hass_schema import (
+from neo_sapiens.few_shot_prompts import orchestrator_prompt_agent
+from neo_sapiens.few_shot_prompts import (
     data,
     data1,
     data2,
@@ -14,6 +18,9 @@ from neo_sapiens.hass_schema import (
 from swarms import SwarmNetwork
 from swarms.utils.parse_code import extract_code_from_markdown
 
+# Load environment variables
+load_dotenv()
+
 # Swarmnetowr
 network = SwarmNetwork(api_enabled=True, logging_enabled=True)
 
@@ -23,6 +30,22 @@ network = SwarmNetwork(api_enabled=True, logging_enabled=True)
 #         return terminal(*args, **kwargs)
 #     elif "browser" in tool:
 #         return browser(*args, **kwargs)
+
+
+def find_agent_id_by_name(name: str):
+    """
+    Find an agent's ID by its name.
+
+    Args:
+        name (str): The name of the agent.
+
+    Returns:
+        str: The ID of the agent.
+    """
+    agents = network.list_agents()
+    for agent in agents:
+        if agent.name == name:
+            return agent.id
 
 
 class ToolSchema(BaseModel):
@@ -81,10 +104,10 @@ class HassSchema(BaseModel):
     # )
 
 
-def transform_schema_to_json(schema: BaseModel):
-    json = schema.model_json_schema()
-    json = base_model_to_json(HassSchema)
-    print(f"JSON Schema: {json}")
+# def transform_schema_to_json(schema: BaseModel):
+# json = HassSchema.model_json_schema()
+# json = base_model_to_json(HassSchema)
+
 
 
 def parse_hass_schema(data: str) -> tuple:
@@ -98,7 +121,7 @@ def parse_hass_schema(data: str) -> tuple:
     Returns:
         tuple: A tuple containing the plan, number of agents, and the agents themselves.
     """
-    parsed_data = eval(data)
+    parsed_data = json.loads(data)
     hass_schema = HassSchema(**parsed_data)
     return (
         hass_schema.plan,
@@ -164,8 +187,10 @@ def create_agents(
         out = Agent(
             agent_name=name,
             system_prompt=system_prompt,
-            llm=OpenAIChat(openai_api_key=None),
-            max_loops="auto",
+            llm=Anthropic(
+                anthropic_api_key=os.getenv("ANTHROPIC_API_KEY")
+            ),
+            max_loops=1,
             autosave=True,
             dashboard=False,
             verbose=True,
@@ -202,13 +227,17 @@ def run_task(task: str = None):
     Returns:
         None
     """
+    system_prompt_daddy = orchestrator_prompt_agent(task)
+    print(system_prompt_daddy)
+    
     agent = Agent(
         agent_name="Swarm Orchestrator",
-        system_prompt=None,
-        llm=OpenAIChat(
-            openai_api_key=None,
+        system_prompt=system_prompt_daddy,
+        llm=Anthropic(
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+            max_tokens=4000,
         ),
-        max_loops="auto",
+        max_loops=1,
         autosave=True,
         dashboard=False,
         verbose=True,
@@ -216,8 +245,18 @@ def run_task(task: str = None):
         # interactive=True,
     )
     out = agent(task)
-    json = extract_code_from_markdown(out)
-    parsed_schema = parse_hass_schema(json)
+    print(out)
+    json_template = extract_code_from_markdown(str(out))
+    print(json_template)
+    parsed_schema = parse_hass_schema(json_template)
     plan, number_of_agents, agents = parsed_schema
     agents = create_agents(agents)
-    # Run the agents on the task
+    print(agents)
+    return agents
+
+
+out = run_task(
+    "Create a team of AI engineers to create an AI for a"
+    " self-driving car"
+)
+print(out)

@@ -1,3 +1,5 @@
+from typing import List
+
 # Example usage
 data = """
 {
@@ -107,7 +109,6 @@ data5 = """
         {
             "name": "Guest Services Agent",
             "system_prompt": "Handle check-ins, check-outs, guest requests, and complaints efficiently"
-            "tool": "browser"
         },
         {
             "name": "Reservations Agent",
@@ -124,3 +125,34 @@ data5 = """
     ]
 }
 """
+
+def merge_fewshots_into_str(
+    plan: List[str] = [data, data1, data2, data3, data5]
+) -> str:
+    """
+    Merge a list of plans into a single string.
+
+    Args:
+        plan (List[str]): A list of plans to be merged.
+
+    Returns:
+        str: The merged plans as a single string.
+    """
+    return "\n".join(plan)
+
+
+
+def orchestrator_prompt_agent(objective: str):
+    prompt = (
+        "Create an instruction prompt for an swarm orchestrator to"
+        " create a series of personalized, agents for the following"
+        f" objective: {objective} to decompose a very complicated"
+        " problem or tasks, the orchestrator is the team leader."
+        " Teach the orchestrator how to decompose the tasks to very"
+        " certain agents with names, and system prompts, we need the"
+        " plan, with a step by stpe instructions, number of agents,"
+        " and a list of agents with a name, system prompt for each,"
+        " and then the rules of the swarm,  compact the prompt, and"
+        f" say only return JSON data in markdown and nothing else. Here are some examples: {data5} Follow the schema here: {data}"
+    )
+    return str(prompt)
