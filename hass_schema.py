@@ -1,22 +1,19 @@
 import json
 import os
-from dotenv import load_dotenv
+import re
 from typing import List
 
+from dotenv import load_dotenv
 from pydantic import BaseModel, Field
-from swarms import Agent, Anthropic
-from swarms.utils.json_utils import base_model_to_json
-from neo_sapiens.few_shot_prompts import orchestrator_prompt_agent
-from neo_sapiens.few_shot_prompts import (
+from swarms import Agent, Anthropic, SwarmNetwork
+
+from few_shot_prompts import (
     data,
     data1,
     data2,
     data3,
+    orchestrator_prompt_agent,
 )
-
-# from neo_sapiens.main import browser, terminal
-from swarms import SwarmNetwork
-from swarms.utils.parse_code import extract_code_from_markdown
 
 # Load environment variables
 load_dotenv()
@@ -104,31 +101,37 @@ class HassSchema(BaseModel):
     # )
 
 
-# def transform_schema_to_json(schema: BaseModel):
-# json = HassSchema.model_json_schema()
-# json = base_model_to_json(HassSchema)
+# import json
+def parse_json_from_input(input_str):
+    # Validate input is not None or empty
+    if not input_str:
+        print("Error: Input string is None or empty.")
+        return None, None, None
 
+    # Attempt to extract JSON from markdown using regular expression
+    json_pattern = re.compile(r"```json\n(.*?)\n```", re.DOTALL)
+    match = json_pattern.search(input_str)
+    json_str = match.group(1).strip() if match else input_str.strip()
+    # print(json_str)
 
+    # Attempt to parse the JSON string
+    try:
+        data = json.loads(json_str)
+        # print(str(data))
+    except json.JSONDecodeError as e:
+        print(f"Error: JSON decoding failed with message '{e}'")
+        return None, None, None
 
-def parse_hass_schema(data: str) -> tuple:
-    """
-    Parses the Home Assistant schema data and returns a tuple containing the plan,
-    number of agents, and the agents themselves.
-
-    Args:
-        data (str): The Home Assistant schema data to be parsed.
-
-    Returns:
-        tuple: A tuple containing the plan, number of agents, and the agents themselves.
-    """
-    parsed_data = json.loads(data)
-    hass_schema = HassSchema(**parsed_data)
+    hass_schema = HassSchema(**data)
     return (
         hass_schema.plan,
         hass_schema.number_of_agents,
         hass_schema.agents,
         # hass_schema.rules,
     )
+
+
+# You can test the function with a markdown string similar to the one provided.
 
 
 def merge_plans_into_str(
@@ -228,8 +231,7 @@ def run_task(task: str = None):
         None
     """
     system_prompt_daddy = orchestrator_prompt_agent(task)
-    print(system_prompt_daddy)
-    
+    # print(system_prompt_daddy)
     agent = Agent(
         agent_name="Swarm Orchestrator",
         system_prompt=system_prompt_daddy,
@@ -244,19 +246,31 @@ def run_task(task: str = None):
         stopping_token="<DONE>",
         # interactive=True,
     )
-    out = agent(task)
-    print(out)
-    json_template = extract_code_from_markdown(str(out))
-    print(json_template)
-    parsed_schema = parse_hass_schema(json_template)
-    plan, number_of_agents, agents = parsed_schema
+    out = agent.run(task)
+    # print(out)
+    out = str(out)
+    print(f"Output: {out}")
+    out = parse_json_from_input(out)
+    print(str(out))
+    plan, number_of_agents, agents = out
+    print(agents)
     agents = create_agents(agents)
     print(agents)
-    return agents
+    # return agents
+    # print(out)
+    # json_template = extract_code_from_markdown(str(out))
+    # print(json_template)
+    # parsed_schema = parse_json_from_markdown(json_template)
+    # plan, number_of_agents, agents = parsed_schema
+    # print(f"Plan: {agents}")
+    # # agents = create_agents(agents)
+    # print(agents)
+    # return agents
+    return out
 
 
 out = run_task(
     "Create a team of AI engineers to create an AI for a"
     " self-driving car"
 )
-print(out)
+# print(out)

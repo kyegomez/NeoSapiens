@@ -126,6 +126,7 @@ data5 = """
 }
 """
 
+
 def merge_fewshots_into_str(
     plan: List[str] = [data, data1, data2, data3, data5]
 ) -> str:
@@ -141,7 +142,6 @@ def merge_fewshots_into_str(
     return "\n".join(plan)
 
 
-
 def orchestrator_prompt_agent(objective: str):
     prompt = (
         "Create an instruction prompt for an swarm orchestrator to"
@@ -153,6 +153,8 @@ def orchestrator_prompt_agent(objective: str):
         " plan, with a step by stpe instructions, number of agents,"
         " and a list of agents with a name, system prompt for each,"
         " and then the rules of the swarm,  compact the prompt, and"
-        f" say only return JSON data in markdown and nothing else. Here are some examples: {data5} Follow the schema here: {data}"
+        " say only return JSON data in markdown and nothing else."
+        f" Here are some examples: {data5} Follow the schema here:"
+        f" {data}"
     )
     return str(prompt)
