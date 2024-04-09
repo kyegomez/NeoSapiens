@@ -8,9 +8,9 @@ from neo_sapiens.hass_schema import (
     data1,
     data2,
     data3,
-    data5,
 )
-from neo_sapiens.main import browser, terminal
+
+# from neo_sapiens.main import browser, terminal
 from swarms import SwarmNetwork
 from swarms.utils.parse_code import extract_code_from_markdown
 
@@ -18,11 +18,11 @@ from swarms.utils.parse_code import extract_code_from_markdown
 network = SwarmNetwork(api_enabled=True, logging_enabled=True)
 
 
-def tool_router(tool: str, *args, **kwargs):
-    if "terminal" in tool:
-        return terminal(*args, **kwargs)
-    elif "browser" in tool:
-        return browser(*args, **kwargs)
+# def tool_router(tool: str, *args, **kwargs):
+#     if "terminal" in tool:
+#         return terminal(*args, **kwargs)
+#     elif "browser" in tool:
+#         return browser(*args, **kwargs)
 
 
 class ToolSchema(BaseModel):
@@ -123,8 +123,8 @@ def merge_plans_into_str(
     return "\n".join(plan)
 
 
-parsed_schema = parse_hass_schema(data5)
-plan, number_of_agents, agents = parsed_schema
+# parsed_schema = parse_hass_schema(data5)
+# plan, number_of_agents, agents = parsed_schema
 
 
 def merge_rules_into_str(prompts: List[str]):
@@ -180,12 +180,12 @@ def create_agents(
     return out
 
 
-out = create_agents(agents)
-# print(out)
+# out = create_agents(agents)
+# # print(out)
 
-# Use network
-list_agents = network.list_agents()
-print(list_agents)
+# # # Use network
+# # list_agents = network.list_agents()
+# # print(list_agents)
 
 # # Run the workflow on a task
 # run = network.run_single_agent(
@@ -213,6 +213,4 @@ def run_task(task: str = None):
     parsed_schema = parse_hass_schema(json)
     plan, number_of_agents, agents = parsed_schema
     agents = create_agents(agents)
-    # Run the agents
-    
-    
+    # Run the agents on the task
