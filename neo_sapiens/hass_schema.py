@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 from swarms import Agent, Anthropic, SwarmNetwork
 
-from few_shot_prompts import (
+from neo_sapiens.few_shot_prompts import (
     data,
     data1,
     data2,
