@@ -10,6 +10,7 @@ from neo_sapiens.hass_schema import (
     ToolSchema,
     parse_json_from_input,
     create_agents,
+    run_swarm,
 )
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "ToolSchema",
     "parse_json_from_input",
     "create_agents",
+    "run_swarm"
 ]

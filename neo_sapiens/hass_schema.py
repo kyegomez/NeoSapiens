@@ -220,7 +220,7 @@ def create_agents(
 # print(out)
 
 
-def run_task(task: str = None):
+def run_swarm(task: str = None):
     """
     Run a task using the Swarm Orchestrator agent.
 
@@ -269,8 +269,8 @@ def run_task(task: str = None):
     return out
 
 
-out = run_task(
-    "Create a team of AI engineers to create an AI for a"
-    " self-driving car"
-)
-# print(out)
+# out = run_task(
+#     "Create a team of AI engineers to create an AI for a"
+#     " self-driving car"
+# )
+# # print(out)
