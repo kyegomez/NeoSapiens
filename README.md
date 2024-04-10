@@ -17,21 +17,21 @@ print(out)
 ```
 
 # Todo
-[ ] Add tool processing
+- [ ] Add tool processing
 
-[ ] Add tool router
+- [ ] Add tool router
 
-[ ] Add rules processing to map to each agent
+- [ ] Add rules processing to map to each agent
 
-[ ] Prompt for swarm orchestrator to make the children workers in JSON
+- [ ] Prompt for swarm orchestrator to make the children workers in JSON
 
-[ ] Prompt to create functions with a tool decorator above the function with specific types and documentation. Create a tool for this: {input}, and create the functions in python with a tool decorator on top of the function with specific types and documentation with docstrings
+- [ ] Prompt to create functions with a tool decorator above the function with specific types and documentation. Create a tool for this: {input}, and create the functions in python with a tool decorator on top of the function with specific types and documentation with docstrings
 
-[ ] Logic to add each agent to a swarm network
+- [ ] Logic to add each agent to a swarm network
 
-[ ] Add memory to boss agent using Chromadb
+- [ ] Add memory to boss agent using Chromadb
 
-[ ] Add agents as tools after the boss creates them
+- [ ] Add agents as tools after the boss creates them
 
 # License
 MIT
