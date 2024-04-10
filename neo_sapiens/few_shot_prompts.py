@@ -218,7 +218,8 @@ def orchestrator_prompt_agent(objective: str):
         " and a list of agents with a name, system prompt for each,"
         " and then the rules of the swarm,  compact the prompt, and"
         " say only return JSON data in markdown and nothing else."
-        f" Here are some examples: {data5} Follow the schema here:"
-        f" {data}"
+        f"Follow the schema here: {data} *############ Here are some examples:"
+        f"{data5} and another example{data3} "
+        
     )
     return str(prompt)
