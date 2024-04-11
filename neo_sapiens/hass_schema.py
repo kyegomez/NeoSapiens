@@ -13,7 +13,8 @@ from neo_sapiens.few_shot_prompts import (
     data2,
     data3,
     orchestrator_prompt_agent,
-    boss_sys_prompt,
+    select_workers,
+    boss_sys_prompt
 )
 from loguru import logger
 
@@ -55,6 +56,8 @@ def find_agent_id_by_name(name: str):
     for agent in network.agent_pool:
         if agent.agent_name == name:
             return agent.id
+        
+        
 
 
 class ToolSchema(BaseModel):
@@ -131,7 +134,6 @@ def parse_json_from_input(input_str):
     hass_schema = HassSchema(**data)
     return (
         hass_schema.plan,
-        hass_schema.number_of_agents,
         hass_schema.agents,
         # hass_schema.rules,
     )
@@ -207,8 +209,6 @@ def create_agents(
             dashboard=False,
             verbose=True,
             stopping_token="<DONE>",
-            interactive=True,
-            # long_term_memory=memory,
         )
 
         network.add_agent(out)
@@ -223,20 +223,21 @@ def print_agent_names(agents: list):
 
 
 @tool
-def agent_tool(agent, task: str):
+def send_task_to_network_agent(name: str, task: str):
     """
-    This function is a tool for the agent to run a specific task.
+    Send a task to a network agent.
 
-    Parameters:
-    - agent: The agent object.
-    - task: The task to be executed by the agent.
+    Args:
+        name (str): The name of the agent.
+        task (str): The task to be sent to the agent.
 
     Returns:
-    - out: The output of the task execution.
+        str: The response from the agent.
     """
-    out = agent.run(task)
+    logger.info(f"Adding agent {name} as a tool")
+    agent_id = find_agent_id_by_name(name)
+    out = network.run_single_agent(agent_id, task)
     return out
-
 
 # out = create_agents(agents)
 # # logger.info(out)
@@ -303,12 +304,12 @@ def master_creates_agents(task: str, *args, **kwargs):
     )
 
     # Task 1: Run the agent and parse the output
-    out = agent.run(task)
-    out = str(out)
+    out = agent.run(str(task))
+    json_agents = out
     logger.info(f"Output: {out}")
     out = parse_json_from_input(out)
     logger.info(str(out))
-    plan, number_of_agents, agents = out
+    plan, agents = out
 
     # Task 2: Print agent names and create agents
     logger.info(agents)
@@ -316,15 +317,17 @@ def master_creates_agents(task: str, *args, **kwargs):
     agents = create_agents(agents)
     logger.info(agents)
     print(type(agents))
+    
+    # Send JSON of agents to boss
+    boss.add_message_to_memory(select_workers(json_agents, task))
+    
+    print(boss.short_memory)
 
     # Task 3: Now add the agents as tools
-    for agent in agents:
-        worker_tool = agent_tool(agent, task)
-        boss.add_tool(worker_tool)
+    boss.add_tool(send_task_to_network_agent)
     
     # Run the boss: 
     out = boss.run(task)
-
 
 
     return out #, agents, plan
@@ -363,11 +366,11 @@ def run_swarm(task: str = None, *args, **kwargs):
     Returns:
         None
     """
-    create_agents, agents, plan = master_creates_agents(
+    out = master_creates_agents(
         task, *args, **kwargs
     )
     # return passed
-    return agents
+    return out
 
 
 # out = run_task(
