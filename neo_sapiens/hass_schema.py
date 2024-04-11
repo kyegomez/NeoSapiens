@@ -14,7 +14,7 @@ from neo_sapiens.few_shot_prompts import (
     data3,
     orchestrator_prompt_agent,
     select_workers,
-    boss_sys_prompt
+    boss_sys_prompt,
 )
 from loguru import logger
 
@@ -56,8 +56,6 @@ def find_agent_id_by_name(name: str):
     for agent in network.agent_pool:
         if agent.agent_name == name:
             return agent.id
-        
-        
 
 
 class ToolSchema(BaseModel):
@@ -239,6 +237,7 @@ def send_task_to_network_agent(name: str, task: str):
     out = network.run_single_agent(agent_id, task)
     return out
 
+
 # out = create_agents(agents)
 # # logger.info(out)
 
@@ -317,20 +316,19 @@ def master_creates_agents(task: str, *args, **kwargs):
     agents = create_agents(agents)
     logger.info(agents)
     print(type(agents))
-    
+
     # Send JSON of agents to boss
     boss.add_message_to_memory(select_workers(json_agents, task))
-    
+
     print(boss.short_memory)
 
     # Task 3: Now add the agents as tools
     boss.add_tool(send_task_to_network_agent)
-    
-    # Run the boss: 
+
+    # Run the boss:
     out = boss.run(task)
 
-
-    return out #, agents, plan
+    return out  # , agents, plan
 
 
 def message_metadata_log(task: str, message: str, agent, plan: str):
@@ -366,9 +364,7 @@ def run_swarm(task: str = None, *args, **kwargs):
     Returns:
         None
     """
-    out = master_creates_agents(
-        task, *args, **kwargs
-    )
+    out = master_creates_agents(task, *args, **kwargs)
     # return passed
     return out
 

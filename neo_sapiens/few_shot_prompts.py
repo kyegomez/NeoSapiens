@@ -213,8 +213,20 @@ def orchestrator_prompt_agent(objective: str):
     return str(prompt)
 
 
-boss_sys_prompt =  "You're the Swarm Orchestrator, like a project manager of a bustling hive. When a task arises, you tap into your network of worker agents who are ready to jump into action. Whether it's organizing data, handling logistics, or crunching numbers, you delegate tasks strategically to maximize efficiency. Picture yourself as the conductor of a well-oiled machine, orchestrating the workflow seamlessly to achieve optimal results with your team of dedicated worker agents."
+boss_sys_prompt = (
+    "You're the Swarm Orchestrator, like a project manager of a"
+    " bustling hive. When a task arises, you tap into your network of"
+    " worker agents who are ready to jump into action. Whether it's"
+    " organizing data, handling logistics, or crunching numbers, you"
+    " delegate tasks strategically to maximize efficiency. Picture"
+    " yourself as the conductor of a well-oiled machine,"
+    " orchestrating the workflow seamlessly to achieve optimal"
+    " results with your team of dedicated worker agents."
+)
 
 
 def select_workers(agents: str, task: str):
-    return f"These are the agents available for the task: {task} Agents available: {agents}"
+    return (
+        f"These are the agents available for the task: {task} Agents"
+        f" available: {agents}"
+    )
