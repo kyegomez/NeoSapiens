@@ -4,7 +4,6 @@ from typing import List
 data = """
 {
     "plan": ["Step 1", "Step 2", "Step 3"],
-    "number_of_agents": 5,
     "agents": [
         {
             "name": "Agent 1",
@@ -22,7 +21,6 @@ data = """
 data1 = """
 {
     "plan": ["Data Collection", "Data Cleaning", "Model Training", "Model Evaluation"],
-    "number_of_agents": 3,
     "agents": [
         {
             "name": "Data Agent",
@@ -44,7 +42,6 @@ data1 = """
 data2 = """
 {
     "plan": ["Literature Review", "Hypothesis Formulation", "Experiment Design", "Data Analysis", "Paper Writing"],
-    "number_of_agents": 5,
     "agents": [
         {
             "name": "Review Agent",
@@ -74,7 +71,6 @@ data2 = """
 data3 = """
 {
     "plan": ["Problem Identification", "Solution Design", "Implementation", "Testing", "Deployment"],
-    "number_of_agents": 4,
     "agents": [
         {
             "name": "Identification Agent",
@@ -100,7 +96,6 @@ data3 = """
 data5 = """
 {
     "plan": ["Room Management", "Guest Services", "Reservations Handling", "Facility Maintenance", "Staff Coordination"],
-    "number_of_agents": 5,
     "agents": [
         {
             "name": "Room Management Agent",
@@ -171,7 +166,6 @@ self_driving_car_prompt = """
             " simulation and real-world testing"
         ),
     ],
-    "number_of_agents": 5,
     "agents": [
         {
             "name": "Computer Vision Agent",
@@ -217,3 +211,6 @@ def orchestrator_prompt_agent(objective: str):
         f" some examples:{data5} and another example{data3} "
     )
     return str(prompt)
+
+
+boss_sys_prompt =  "You're the Swarm Orchestrator, like a project manager of a bustling hive. When a task arises, you tap into your network of worker agents who are ready to jump into action. Whether it's organizing data, handling logistics, or crunching numbers, you delegate tasks strategically to maximize efficiency. Picture yourself as the conductor of a well-oiled machine, orchestrating the workflow seamlessly to achieve optimal results with your team of dedicated worker agents."

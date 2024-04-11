@@ -5,7 +5,7 @@ from typing import List
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
-from swarms import Agent, Anthropic, SwarmNetwork
+from swarms import Agent, Anthropic, SwarmNetwork, tool
 
 from neo_sapiens.few_shot_prompts import (
     data,
@@ -13,6 +13,7 @@ from neo_sapiens.few_shot_prompts import (
     data2,
     data3,
     orchestrator_prompt_agent,
+    boss_sys_prompt,
 )
 from loguru import logger
 
@@ -94,11 +95,6 @@ class HassSchema(BaseModel):
         title="Plan to solve the input problem",
         description="List of steps to solve the problem",
     )
-    number_of_agents: int = Field(
-        ...,
-        title="Number of agents to use for the problem",
-        description="Number of agents to use for the problem",
-    )
     agents: List[AgentSchema] = Field(
         ...,
         title="List of agents to use for the problem",
@@ -178,7 +174,7 @@ def merge_rules_into_str(prompts: List[str]):
 
 def create_agents(
     agents: List[AgentSchema],
-):
+) -> List[Agent]:
     """
     Create and initialize agents based on the provided AgentSchema objects.
 
@@ -186,9 +182,10 @@ def create_agents(
         agents (List[AgentSchema]): A list of AgentSchema objects containing agent information.
 
     Returns:
-        Agent: The initialized Agent object.
+        List[Agent]: The initialized Agent objects.
 
     """
+    agent_list = []
     for agent in agents:
         name = agent.name
         system_prompt = agent.system_prompt
@@ -215,13 +212,30 @@ def create_agents(
         )
 
         network.add_agent(out)
+        agent_list.append(out)
 
-    return out
+    return agent_list
 
 
 def print_agent_names(agents: list):
     for agent in agents:
         logger.info(agent.name)
+
+
+@tool
+def agent_tool(agent, task: str):
+    """
+    This function is a tool for the agent to run a specific task.
+
+    Parameters:
+    - agent: The agent object.
+    - task: The task to be executed by the agent.
+
+    Returns:
+    - out: The output of the task execution.
+    """
+    out = agent.run(task)
+    return out
 
 
 # out = create_agents(agents)
@@ -238,7 +252,7 @@ def print_agent_names(agents: list):
 # logger.info(out)
 
 
-def master_creates_agents(task: str):
+def master_creates_agents(task: str, *args, **kwargs):
     """
     Master function to create agents based on a task.
 
@@ -249,6 +263,8 @@ def master_creates_agents(task: str):
         None
     """
     system_prompt_daddy = orchestrator_prompt_agent(task)
+
+    # Create the agents
     agent = Agent(
         agent_name="Swarm Orchestrator",
         system_prompt=system_prompt_daddy,
@@ -261,20 +277,57 @@ def master_creates_agents(task: str):
         dashboard=False,
         verbose=True,
         stopping_token="<DONE>",
-        interactive=True,
+        # interactive=True,
         # long_term_memory=memory,
+        *args,
+        **kwargs,
     )
+
+    # Call the agents [ Main Agents ]
+    # Create the agents
+    boss = Agent(
+        agent_name="Swarm Orchestrator",
+        system_prompt=boss_sys_prompt,
+        llm=Anthropic(
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+            max_tokens=4000,
+        ),
+        max_loops="auto",
+        autosave=True,
+        dashboard=False,
+        verbose=True,
+        stopping_token="<DONE>",
+        interactive=True,
+        *args,
+        **kwargs,
+    )
+
+    # Task 1: Run the agent and parse the output
     out = agent.run(task)
     out = str(out)
     logger.info(f"Output: {out}")
     out = parse_json_from_input(out)
     logger.info(str(out))
     plan, number_of_agents, agents = out
+
+    # Task 2: Print agent names and create agents
     logger.info(agents)
     logger.info(print_agent_names(agents))
     agents = create_agents(agents)
     logger.info(agents)
-    return out, agents, plan
+    print(type(agents))
+
+    # Task 3: Now add the agents as tools
+    for agent in agents:
+        worker_tool = agent_tool(agent, task)
+        boss.add_tool(worker_tool)
+    
+    # Run the boss: 
+    out = boss.run(task)
+
+
+
+    return out #, agents, plan
 
 
 def message_metadata_log(task: str, message: str, agent, plan: str):
@@ -300,7 +353,7 @@ def message_metadata_log(task: str, message: str, agent, plan: str):
     return doc
 
 
-def run_swarm(task: str = None):
+def run_swarm(task: str = None, *args, **kwargs):
     """
     Run a task using the Swarm Orchestrator agent.
 
@@ -310,23 +363,11 @@ def run_swarm(task: str = None):
     Returns:
         None
     """
-    create_agents, agents, plan = master_creates_agents(task)
-
-    # Then the agents work on sequentially on the task
-    task = {
-        "task": task,
-        "plan": create_agents,
-    }
-    # Now transform dict into string
-    task = json.dumps(task)
-    task = str(task)
-
-    # Run the workflow on a task
-    for agent in agents:
-        run = agent.run(task)
-        passed = agent.run(run)
-
-    return passed
+    create_agents, agents, plan = master_creates_agents(
+        task, *args, **kwargs
+    )
+    # return passed
+    return agents
 
 
 # out = run_task(
