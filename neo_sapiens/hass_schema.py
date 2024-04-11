@@ -14,6 +14,9 @@ from neo_sapiens.few_shot_prompts import (
     data3,
     orchestrator_prompt_agent,
 )
+from loguru import logger
+
+# from neo_sapiens.chroma_db_s import ChromaDB
 
 # Load environment variables
 load_dotenv()
@@ -21,6 +24,15 @@ load_dotenv()
 # Swarmnetowr
 network = SwarmNetwork(api_enabled=True, logging_enabled=True)
 
+
+# Initialize memory
+# memory = ChromaDB(
+#     metric="cosine",
+#     output_dir="swarms",
+#     limit_tokens=1000,
+#     n_results=2,
+#     verbose=False,
+# )
 
 # def tool_router(tool: str, *args, **kwargs):
 #     if "terminal" in tool:
@@ -39,9 +51,8 @@ def find_agent_id_by_name(name: str):
     Returns:
         str: The ID of the agent.
     """
-    agents = network.list_agents()
-    for agent in agents:
-        if agent.name == name:
+    for agent in network.agent_pool:
+        if agent.agent_name == name:
             return agent.id
 
 
@@ -105,21 +116,20 @@ class HassSchema(BaseModel):
 def parse_json_from_input(input_str):
     # Validate input is not None or empty
     if not input_str:
-        print("Error: Input string is None or empty.")
+        logger.info("Error: Input string is None or empty.")
         return None, None, None
 
     # Attempt to extract JSON from markdown using regular expression
     json_pattern = re.compile(r"```json\n(.*?)\n```", re.DOTALL)
     match = json_pattern.search(input_str)
     json_str = match.group(1).strip() if match else input_str.strip()
-    # print(json_str)
+    # logger.info(json_str)
 
     # Attempt to parse the JSON string
     try:
         data = json.loads(json_str)
-        # print(str(data))
     except json.JSONDecodeError as e:
-        print(f"Error: JSON decoding failed with message '{e}'")
+        logger.info(f"Error: JSON decoding failed with message '{e}'")
         return None, None, None
 
     hass_schema = HassSchema(**data)
@@ -180,12 +190,14 @@ def create_agents(
 
     """
     for agent in agents:
-        print(agent)
         name = agent.name
         system_prompt = agent.system_prompt
-        print(agent.name)
-        print(agent.system_prompt)
-        print("\n")
+
+        logger.info(
+            f"Creating agent: {name} with system prompt:"
+            f" {system_prompt}"
+        )
+        logger.info("\n")
 
         out = Agent(
             agent_name=name,
@@ -199,6 +211,7 @@ def create_agents(
             verbose=True,
             stopping_token="<DONE>",
             interactive=True,
+            # long_term_memory=memory,
         )
 
         network.add_agent(out)
@@ -206,23 +219,28 @@ def create_agents(
     return out
 
 
+def print_agent_names(agents: list):
+    for agent in agents:
+        logger.info(agent.name)
+
+
 # out = create_agents(agents)
-# # print(out)
+# # logger.info(out)
 
 # # # Use network
 # # list_agents = network.list_agents()
-# # print(list_agents)
+# # logger.info(list_agents)
 
 # # Run the workflow on a task
 # run = network.run_single_agent(
 #     agent2.id, "What's your name?"
 # )
-# print(out)
+# logger.info(out)
 
 
-def run_swarm(task: str = None):
+def master_creates_agents(task: str):
     """
-    Run a task using the Swarm Orchestrator agent.
+    Master function to create agents based on a task.
 
     Args:
         task (str): The task to be executed.
@@ -231,7 +249,6 @@ def run_swarm(task: str = None):
         None
     """
     system_prompt_daddy = orchestrator_prompt_agent(task)
-    # print(system_prompt_daddy)
     agent = Agent(
         agent_name="Swarm Orchestrator",
         system_prompt=system_prompt_daddy,
@@ -244,33 +261,76 @@ def run_swarm(task: str = None):
         dashboard=False,
         verbose=True,
         stopping_token="<DONE>",
-        # interactive=True,
+        interactive=True,
+        # long_term_memory=memory,
     )
     out = agent.run(task)
-    # print(out)
     out = str(out)
-    print(f"Output: {out}")
+    logger.info(f"Output: {out}")
     out = parse_json_from_input(out)
-    print(str(out))
+    logger.info(str(out))
     plan, number_of_agents, agents = out
-    print(agents)
+    logger.info(agents)
+    logger.info(print_agent_names(agents))
     agents = create_agents(agents)
-    print(agents)
-    # return agents
-    # print(out)
-    # json_template = extract_code_from_markdown(str(out))
-    # print(json_template)
-    # parsed_schema = parse_json_from_markdown(json_template)
-    # plan, number_of_agents, agents = parsed_schema
-    # print(f"Plan: {agents}")
-    # # agents = create_agents(agents)
-    # print(agents)
-    # return agents
-    return out
+    logger.info(agents)
+    return out, agents, plan
+
+
+def message_metadata_log(task: str, message: str, agent, plan: str):
+    """
+    Create a document with metadata for a log message.
+
+    Args:
+        task (str): The task associated with the log message.
+        message (str): The log message.
+        agent: The agent object.
+        plan (str): The plan associated with the log message.
+
+    Returns:
+        dict: A dictionary containing the log message metadata.
+    """
+    doc = {
+        "message": message,
+        "task": task,
+        "agent_name": agent.agent_name,
+        "plan": plan,
+    }
+
+    return doc
+
+
+def run_swarm(task: str = None):
+    """
+    Run a task using the Swarm Orchestrator agent.
+
+    Args:
+        task (str): The task to be executed.
+
+    Returns:
+        None
+    """
+    create_agents, agents, plan = master_creates_agents(task)
+
+    # Then the agents work on sequentially on the task
+    task = {
+        "task": task,
+        "plan": create_agents,
+    }
+    # Now transform dict into string
+    task = json.dumps(task)
+    task = str(task)
+
+    # Run the workflow on a task
+    for agent in agents:
+        run = agent.run(task)
+        passed = agent.run(run)
+
+    return passed
 
 
 # out = run_task(
 #     "Create a team of AI engineers to create an AI for a"
 #     " self-driving car"
 # )
-# # print(out)
+# # logger.info(out)

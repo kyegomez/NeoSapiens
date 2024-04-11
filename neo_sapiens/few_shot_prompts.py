@@ -142,9 +142,6 @@ def merge_fewshots_into_str(
     return "\n".join(plan)
 
 
-
-
-
 self_driving_car_prompt = """
 
 {
@@ -204,8 +201,6 @@ self_driving_car_prompt = """
 """
 
 
-
-
 def orchestrator_prompt_agent(objective: str):
     prompt = (
         "Create an instruction prompt for an swarm orchestrator to"
@@ -217,9 +212,8 @@ def orchestrator_prompt_agent(objective: str):
         " plan, with a step by stpe instructions, number of agents,"
         " and a list of agents with a name, system prompt for each,"
         " and then the rules of the swarm,  compact the prompt, and"
-        " say only return JSON data in markdown and nothing else."
-        f"Follow the schema here: {data} *############ Here are some examples:"
-        f"{data5} and another example{data3} "
-        
+        " say only return JSON data in markdown and nothing"
+        f" else.Follow the schema here: {data} *############ Here are"
+        f" some examples:{data5} and another example{data3} "
     )
     return str(prompt)
