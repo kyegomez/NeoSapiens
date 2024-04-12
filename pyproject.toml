@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "neo-sapiens"
-version = "0.0.4"
+version = "0.0.6"
 description = "Neo Sapiens - Pytorch"
 license = "MIT"
 authors = ["Kye Gomez <kye@apac.ai>"]
@@ -25,6 +25,7 @@ classifiers = [
 python = "^3.9"
 swarms = "*"
 pydantic = "*"
+loguru = "*"
 
 
 [tool.poetry.group.lint.dependencies]
