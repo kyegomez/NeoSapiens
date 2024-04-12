@@ -17,8 +17,7 @@ from neo_sapiens.few_shot_prompts import (
     boss_sys_prompt,
 )
 from loguru import logger
-
-# from neo_sapiens.chroma_db_s import ChromaDB
+from neo_sapiens.tools_preset import terminal, browser
 
 # Load environment variables
 load_dotenv()
@@ -120,7 +119,6 @@ def parse_json_from_input(input_str):
     json_pattern = re.compile(r"```json\n(.*?)\n```", re.DOTALL)
     match = json_pattern.search(input_str)
     json_str = match.group(1).strip() if match else input_str.strip()
-    # logger.info(json_str)
 
     # Attempt to parse the JSON string
     try:
@@ -194,7 +192,6 @@ def create_agents(
             f"Creating agent: {name} with system prompt:"
             f" {system_prompt}"
         )
-        logger.info("\n")
 
         out = Agent(
             agent_name=name,
@@ -207,6 +204,7 @@ def create_agents(
             dashboard=False,
             verbose=True,
             stopping_token="<DONE>",
+            tools=[browser, terminal],
         )
 
         network.add_agent(out)
@@ -217,7 +215,7 @@ def create_agents(
 
 def print_agent_names(agents: list):
     for agent in agents:
-        logger.info(agent.name)
+        logger.info(f"Agent Name: {agent.agent_name}")
 
 
 @tool
@@ -236,20 +234,6 @@ def send_task_to_network_agent(name: str, task: str):
     agent_id = find_agent_id_by_name(name)
     out = network.run_single_agent(agent_id, task)
     return out
-
-
-# out = create_agents(agents)
-# # logger.info(out)
-
-# # # Use network
-# # list_agents = network.list_agents()
-# # logger.info(list_agents)
-
-# # Run the workflow on a task
-# run = network.run_single_agent(
-#     agent2.id, "What's your name?"
-# )
-# logger.info(out)
 
 
 def master_creates_agents(task: str, *args, **kwargs):
@@ -277,8 +261,6 @@ def master_creates_agents(task: str, *args, **kwargs):
         dashboard=False,
         verbose=True,
         stopping_token="<DONE>",
-        # interactive=True,
-        # long_term_memory=memory,
         *args,
         **kwargs,
     )
@@ -303,24 +285,23 @@ def master_creates_agents(task: str, *args, **kwargs):
     )
 
     # Task 1: Run the agent and parse the output
+    logger.info("Creating the workers ...")
     out = agent.run(str(task))
-    json_agents = out
-    logger.info(f"Output: {out}")
+    # logger.info(f"Output: {out}")
     out = parse_json_from_input(out)
-    logger.info(str(out))
+    json_agentic_output = out
+    # logger.info(str(out))
     plan, agents = out
 
     # Task 2: Print agent names and create agents
-    logger.info(agents)
-    logger.info(print_agent_names(agents))
+    # logger.info(agents)
+    # logger.info("Creating agents...")
     agents = create_agents(agents)
-    logger.info(agents)
-    print(type(agents))
 
     # Send JSON of agents to boss
-    boss.add_message_to_memory(select_workers(json_agents, task))
-
-    print(boss.short_memory)
+    boss.add_message_to_memory(
+        select_workers(json_agentic_output, task)
+    )
 
     # Task 3: Now add the agents as tools
     boss.add_tool(send_task_to_network_agent)
@@ -367,10 +348,3 @@ def run_swarm(task: str = None, *args, **kwargs):
     out = master_creates_agents(task, *args, **kwargs)
     # return passed
     return out
-
-
-# out = run_task(
-#     "Create a team of AI engineers to create an AI for a"
-#     " self-driving car"
-# )
-# # logger.info(out)
