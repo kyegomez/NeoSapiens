@@ -17,7 +17,12 @@ from neo_sapiens.few_shot_prompts import (
     boss_sys_prompt,
 )
 from loguru import logger
-from neo_sapiens.tools_preset import terminal, browser
+from neo_sapiens.tools_preset import (
+    terminal,
+    browser,
+    file_editor,
+    create_file,
+)
 
 # Load environment variables
 load_dotenv()
@@ -204,7 +209,7 @@ def create_agents(
             dashboard=False,
             verbose=True,
             stopping_token="<DONE>",
-            tools=[browser, terminal],
+            tools=[browser, terminal, create_file, file_editor],
         )
 
         network.add_agent(out)
