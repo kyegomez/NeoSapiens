@@ -271,7 +271,6 @@ def master_creates_agents(task: str, *args, **kwargs):
     )
 
     # Call the agents [ Main Agents ]
-    # Create the agents
     boss = Agent(
         agent_name="Swarm Orchestrator",
         system_prompt=boss_sys_prompt,
@@ -283,8 +282,8 @@ def master_creates_agents(task: str, *args, **kwargs):
         autosave=True,
         dashboard=False,
         verbose=True,
-        stopping_token="<DONE>",
         interactive=True,
+        stopping_token="<DONE>",
         *args,
         **kwargs,
     )
@@ -292,10 +291,9 @@ def master_creates_agents(task: str, *args, **kwargs):
     # Task 1: Run the agent and parse the output
     logger.info("Creating the workers ...")
     out = agent.run(str(task))
+    json_agentic_output = out
     # logger.info(f"Output: {out}")
     out = parse_json_from_input(out)
-    json_agentic_output = out
-    # logger.info(str(out))
     plan, agents = out
 
     # Task 2: Print agent names and create agents
@@ -315,29 +313,6 @@ def master_creates_agents(task: str, *args, **kwargs):
     out = boss.run(task)
 
     return out  # , agents, plan
-
-
-def message_metadata_log(task: str, message: str, agent, plan: str):
-    """
-    Create a document with metadata for a log message.
-
-    Args:
-        task (str): The task associated with the log message.
-        message (str): The log message.
-        agent: The agent object.
-        plan (str): The plan associated with the log message.
-
-    Returns:
-        dict: A dictionary containing the log message metadata.
-    """
-    doc = {
-        "message": message,
-        "task": task,
-        "agent_name": agent.agent_name,
-        "plan": plan,
-    }
-
-    return doc
 
 
 def run_swarm(task: str = None, *args, **kwargs):
