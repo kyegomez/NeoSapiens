@@ -31,15 +31,6 @@ load_dotenv()
 network = SwarmNetwork(api_enabled=True, logging_enabled=True)
 
 
-# Initialize memory
-# memory = ChromaDB(
-#     metric="cosine",
-#     output_dir="swarms",
-#     limit_tokens=1000,
-#     n_results=2,
-#     verbose=False,
-# )
-
 # def tool_router(tool: str, *args, **kwargs):
 #     if "terminal" in tool:
 #         return terminal(*args, **kwargs)
@@ -76,10 +67,17 @@ class AgentSchema(BaseModel):
         title="Name of the agent",
         description="Name of the agent",
     )
-    system_prompt: str = Field(
+    system_prompt: str = (
+        Field(
+            ...,
+            title="System prompt for the agent",
+            description="System prompt for the agent",
+        ),
+    )
+    rules: str = Field(
         ...,
-        title="System prompt for the agent",
-        description="System prompt for the agent",
+        title="Rules",
+        description="Rules for the agent",
     )
     # tools: List[ToolSchema] = Field(
     #     ...,
@@ -95,7 +93,7 @@ class AgentSchema(BaseModel):
 
 
 class HassSchema(BaseModel):
-    plan: List[str] = Field(
+    plan: str = Field(
         ...,
         title="Plan to solve the input problem",
         description="List of steps to solve the problem",
@@ -105,6 +103,7 @@ class HassSchema(BaseModel):
         title="List of agents to use for the problem",
         description="List of agents to use for the problem",
     )
+
     # Rules for the agents
     # rules: str = Field(
     #     ...,
@@ -175,7 +174,7 @@ def merge_rules_into_str(prompts: List[str]):
     return "\n".join(prompts)
 
 
-def create_agents(
+def create_worker_agents(
     agents: List[AgentSchema],
 ) -> List[Agent]:
     """
@@ -218,6 +217,44 @@ def create_agents(
     return agent_list
 
 
+@tool
+def create_agents_by_boss(team: str = None, *args, **kwargs):
+    """
+    Create agents by boss.
+
+    Args:
+        team (str): The name of the team. Defaults to None.
+        *args: Variable length argument list.
+        **kwargs: Arbitrary keyword arguments.
+
+    Returns:
+        str: The output of the agent run.
+
+    """
+    system_prompt_daddy = orchestrator_prompt_agent(team)
+
+    # Create the agents
+    agent = Agent(
+        agent_name="Swarm Orchestrator",
+        system_prompt=system_prompt_daddy,
+        llm=Anthropic(
+            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
+            max_tokens=4000,
+        ),
+        max_loops=1,
+        autosave=True,
+        dashboard=False,
+        verbose=True,
+        stopping_token="<DONE>",
+        *args,
+        **kwargs,
+    )
+
+    # Run the agent and parse the output
+    out = agent.run(str(team))
+    return out
+
+
 def print_agent_names(agents: list):
     for agent in agents:
         logger.info(f"Agent Name: {agent.agent_name}")
@@ -241,7 +278,7 @@ def send_task_to_network_agent(name: str, task: str):
     return out
 
 
-def master_creates_agents(task: str, *args, **kwargs):
+def build_swarm(team_task: str, task: str, *args, **kwargs):
     """
     Master function to create agents based on a task.
 
@@ -251,25 +288,6 @@ def master_creates_agents(task: str, *args, **kwargs):
     Returns:
         None
     """
-    system_prompt_daddy = orchestrator_prompt_agent(task)
-
-    # Create the agents
-    agent = Agent(
-        agent_name="Swarm Orchestrator",
-        system_prompt=system_prompt_daddy,
-        llm=Anthropic(
-            anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
-            max_tokens=4000,
-        ),
-        max_loops=1,
-        autosave=True,
-        dashboard=False,
-        verbose=True,
-        stopping_token="<DONE>",
-        *args,
-        **kwargs,
-    )
-
     # Call the agents [ Main Agents ]
     boss = Agent(
         agent_name="Swarm Orchestrator",
@@ -284,13 +302,14 @@ def master_creates_agents(task: str, *args, **kwargs):
         verbose=True,
         interactive=True,
         stopping_token="<DONE>",
-        *args,
+        tools=[create_agents_by_boss, send_task_to_network_agent]
+        * args,
         **kwargs,
     )
 
     # Task 1: Run the agent and parse the output
     logger.info("Creating the workers ...")
-    out = agent.run(str(task))
+    out = create_agents_by_boss(team_task)
     json_agentic_output = out
     # logger.info(f"Output: {out}")
     out = parse_json_from_input(out)
@@ -299,23 +318,25 @@ def master_creates_agents(task: str, *args, **kwargs):
     # Task 2: Print agent names and create agents
     # logger.info(agents)
     # logger.info("Creating agents...")
-    agents = create_agents(agents)
+    agents = create_worker_agents(agents)
 
     # Send JSON of agents to boss
     boss.add_message_to_memory(
         select_workers(json_agentic_output, task)
     )
 
-    # Task 3: Now add the agents as tools
-    boss.add_tool(send_task_to_network_agent)
+    # Task 3: Now add the agents as tools -- Run the agents in a loop sequentially
+    # boss.add_tool(send_task_to_network_agent)
 
     # Run the boss:
     out = boss.run(task)
 
-    return out  # , agents, plan
+    return out
 
 
-def run_swarm(task: str = None, *args, **kwargs):
+def run_swarm(
+    team_task: str = None, task: str = None, *args, **kwargs
+):
     """
     Run a task using the Swarm Orchestrator agent.
 
@@ -325,6 +346,5 @@ def run_swarm(task: str = None, *args, **kwargs):
     Returns:
         None
     """
-    out = master_creates_agents(task, *args, **kwargs)
-    # return passed
+    out = build_swarm(team_task, task, *args, **kwargs)
     return out

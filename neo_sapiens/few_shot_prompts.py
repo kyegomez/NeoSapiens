@@ -3,7 +3,7 @@ from typing import List
 # Example usage
 data = """
 {
-    "plan": ["Step 1", "Step 2", "Step 3"],
+    "plan": "Step 1",
     "agents": [
         {
             "name": "Agent 1",
@@ -20,7 +20,7 @@ data = """
 # AI Research Team 1
 data1 = """
 {
-    "plan": ["Data Collection", "Data Cleaning", "Model Training", "Model Evaluation"],
+    "plan": "Data Collection, Data Cleaning, Model Training, Model Evaluation",
     "agents": [
         {
             "name": "Data Agent",
@@ -41,7 +41,7 @@ data1 = """
 # AI Research Team 2
 data2 = """
 {
-    "plan": ["Literature Review", "Hypothesis Formulation", "Experiment Design", "Data Analysis", "Paper Writing"],
+    "plan": "Literature Review, Hypothesis Formulation, Experiment Design, Data Analysis, Paper Writing",
     "agents": [
         {
             "name": "Review Agent",
@@ -70,7 +70,7 @@ data2 = """
 # AI Research Team 3
 data3 = """
 {
-    "plan": ["Problem Identification", "Solution Design", "Implementation", "Testing", "Deployment"],
+    "plan": "Problem Identification, Solution Design, Implementation, Testing, Deployment",
     "agents": [
         {
             "name": "Identification Agent",
@@ -95,7 +95,7 @@ data3 = """
 
 data5 = """
 {
-    "plan": ["Room Management", "Guest Services", "Reservations Handling", "Facility Maintenance", "Staff Coordination"],
+    "plan": "Room Management, Guest Services, Reservations Handling, Facility Maintenance, Staff Coordination",
     "agents": [
         {
             "name": "Room Management Agent",
@@ -140,32 +140,22 @@ def merge_fewshots_into_str(
 self_driving_car_prompt = """
 
 {
-    "plan": [
-        (
-            "Step 1: Create agents specialized in different areas"
-            " like computer vision, sensor fusion, controls,"
-            " planning, etc."
-        ),
-        (
-            "Step 2: Have the team leader agent decompose the overall"
-            " self-driving task into sub-problems and assign them to"
-            " the specialized agents"
-        ),
-        (
-            "Step 3: Have each agent focus on solving their specific"
-            " sub-problem using the latest AI techniques"
-        ),
-        (
-            "Step 4: Have agents coordinate solutions with each other"
-            " through the team leader to make sure components work"
-            " together"
-        ),
-        (
-            "Step 5: Integrate components into a complete"
-            " self-driving system and validate performance through"
-            " simulation and real-world testing"
-        ),
-    ],
+    "plan": (
+        "Step 1: Create agents specialized in different areas"
+        " like computer vision, sensor fusion, controls,"
+        " planning, etc.",
+        "Step 2: Have the team leader agent decompose the overall"
+        " self-driving task into sub-problems and assign them to"
+        " the specialized agents",
+        "Step 3: Have each agent focus on solving their specific"
+        " sub-problem using the latest AI techniques",
+        "Step 4: Have agents coordinate solutions with each other"
+        " through the team leader to make sure components work"
+        " together",
+        "Step 5: Integrate components into a complete"
+        " self-driving system and validate performance through"
+        " simulation and real-world testing"
+    ),
     "agents": [
         {
             "name": "Computer Vision Agent",

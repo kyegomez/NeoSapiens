@@ -2,8 +2,8 @@ import os
 import shutil
 
 # Create a new directory for the log files if it doesn't exist
-if not os.path.exists("artifacts"):
-    os.makedirs("artifacts")
+if not os.path.exists("artifacts1"):
+    os.makedirs("artifacts1")
 
 # Walk through the current directory
 for dirpath, dirnames, filenames in os.walk("."):
