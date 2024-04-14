@@ -8,9 +8,7 @@ parser = argparse.ArgumentParser(description="Run the swarm")
 parser.add_argument(
     "--team_task", type=str, help="The team task for the swarm"
 )
-parser.add_argument(
-    "--task", type=str, help="The task for the swarm"
-)
+parser.add_argument("--task", type=str, help="The task for the swarm")
 
 # Parse the command line arguments
 args = parser.parse_args()
