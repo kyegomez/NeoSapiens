@@ -5,7 +5,8 @@ from typing import List
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
-from swarms import Agent, Anthropic, SwarmNetwork, tool
+from swarms import Agent, Anthropic
+from swarms.structs.swarm_net import SwarmNetwork
 
 from neo_sapiens.few_shot_prompts import (
     data,
@@ -217,7 +218,6 @@ def create_worker_agents(
     return agent_list
 
 
-@tool
 def create_agents_by_boss(team: str = None, *args, **kwargs):
     """
     Create agents by boss.
@@ -260,7 +260,6 @@ def print_agent_names(agents: list):
         logger.info(f"Agent Name: {agent.agent_name}")
 
 
-@tool
 def send_task_to_network_agent(name: str, task: str):
     """
     Send a task to a network agent.
